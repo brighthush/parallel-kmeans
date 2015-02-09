@@ -2,3 +2,5 @@
 *.out
 
 source.c
+bin/
+
