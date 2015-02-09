@@ -4,5 +4,5 @@ Implemente kmeans algorithm with MPI and multi-thread manners.
 * Using posix_thread to implemente K-means algorith, these codes are stored in multi-thread-kmeans.  
 
 ## visualization of kmeans for random generated data
-![iteration-2](visual/iteration-2.png)
+![iteration-2](python/iteration-2.png)
 
