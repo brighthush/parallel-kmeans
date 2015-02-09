@@ -49,7 +49,9 @@ class ProcData:
                 plt.scatter(dx[i:i+1], dy[i:i+1], c='g', marker='o')
             else:
                 plt.scatter(dx[i:i+1], dy[i:i+1], c='b', marker='o')
-        plt.savefig('./iteration-2.png')
+        fig_name = self.data_path.split('/')[-1]
+        fig_name += '.png'
+        plt.savefig('./' + fig_name)
         plt.show()
 
 def main():

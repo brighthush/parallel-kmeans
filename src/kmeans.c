@@ -26,7 +26,7 @@ void randData(int num_clusters, int num_rows, int num_cols, real *data)
         real center = c * 20.0;
         for(j=0; j<num_cols; ++j)
         {
-            data[i * num_cols + j] = center + randRange(0, 20.0);
+            data[i * num_cols + j] = center + randRange(-10.0, 10.0);
         }
     }
     //for(i=0; i<num_rows; ++i) for(j=0; j<num_cols; ++j)
