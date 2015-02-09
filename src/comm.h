@@ -11,7 +11,7 @@ typedef double real;
 typedef struct PROC_DATA
 {
     int id, num_procs;
-    ll num_rows, num_cols;
+    int num_rows, num_cols;
     real *data;
     char *rowname;
     // the number of clusters, each point belongs to which cluster, 

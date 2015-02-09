@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "comm.h"
+#include "io.h"
 
 void randData(int num_clusters, int num_rows, int num_cols, real *data)
 {
@@ -19,20 +20,23 @@ void randData(int num_clusters, int num_rows, int num_cols, real *data)
             num_clusters=%d, num_rows=%d, num_cols=%d.\n", \
             num_clusters, num_rows, num_cols);
     int c, i, j;
-    for(i=0; i<num_rows; ++i) for(j=0; j<num_cols; ++j)
+    for(i=0; i<num_rows; ++i)
     {
         c = rand() % num_clusters;
         real center = c * 20.0;
-        data[i * num_cols + j] = center + randRange(0, 5.0);
+        for(j=0; j<num_cols; ++j)
+        {
+            data[i * num_cols + j] = center + randRange(0, 20.0);
+        }
     }
     //for(i=0; i<num_rows; ++i) for(j=0; j<num_cols; ++j)
     //    printf("%lf%c", data[i * num_cols + j], j==num_cols-1?'\n':' ');
     printf("finished randData.\n");
 }
 
-void readHead(ll *num_rows, ll *num_cols, real **data, char **rowname)
+void readHead(int *num_rows, int *num_cols, real **data, char **rowname)
 {
-    *num_rows = 10;
+    *num_rows = 500;
     *num_cols = 2;
     int rows = *num_rows, cols = *num_cols;
     *data = (real *)malloc(sizeof(real) * rows * cols);
@@ -138,8 +142,8 @@ void initMaster(ProcData *proc)
         if(i == num_slaves) right = proc->num_rows;
         MPI_Send(&(proc->num_clusters), 1, MPI_INT, i, send_tag++, MPI_COMM_WORLD);           // send num_clusters
         int size = right - left;
-        MPI_Send(&size, 1, MPI_LONG_LONG_INT, i, send_tag++, MPI_COMM_WORLD);                 // send num_rows
-        MPI_Send(&(proc->num_cols), 1, MPI_LONG_LONG_INT, i, send_tag++, MPI_COMM_WORLD);     // send num_cols
+        MPI_Send(&size, 1, MPI_INT, i, send_tag++, MPI_COMM_WORLD);                 // send num_rows
+        MPI_Send(&(proc->num_cols), 1, MPI_INT, i, send_tag++, MPI_COMM_WORLD);     // send num_cols
         printf("send data [%d, %d) in initMaster.\n", left, right);
         MPI_Send((void *)(proc->data + left * proc->num_cols), size * (proc->num_cols), \
                 MPI_DOUBLE, i, send_tag++, MPI_COMM_WORLD);                                   // send row data
@@ -153,9 +157,9 @@ void initSlave(ProcData *proc)
     MPI_Status status;
     int recv_tag = 0;
     MPI_Recv(&(proc->num_clusters), 1, MPI_INT, MASTER, recv_tag++, MPI_COMM_WORLD, &status); // recv num_clusters
-    MPI_Recv(&(proc->num_rows), 1, MPI_LONG_LONG_INT, MASTER, recv_tag++, MPI_COMM_WORLD, &status);     // recv num_rows
-    MPI_Recv(&(proc->num_cols), 1, MPI_LONG_LONG_INT, MASTER, recv_tag++, MPI_COMM_WORLD, &status);     // recv num_cols
-    printf("porcess %d, get num_rows=%lld, num_cols=%lld\n", proc->id, proc->num_rows, proc->num_cols);
+    MPI_Recv(&(proc->num_rows), 1, MPI_INT, MASTER, recv_tag++, MPI_COMM_WORLD, &status);     // recv num_rows
+    MPI_Recv(&(proc->num_cols), 1, MPI_INT, MASTER, recv_tag++, MPI_COMM_WORLD, &status);     // recv num_cols
+    printf("porcess %d, get num_rows=%d, num_cols=%d\n", proc->id, proc->num_rows, proc->num_cols);
     proc->data = (real *)malloc((ll)sizeof(real) * (proc->num_rows) * (proc->num_cols));
     if(proc->data == NULL) { printf("malloc data failed in slave %d\n", proc->id); exit(-1); }
     MPI_Recv((void*)proc->data, proc->num_rows * proc->num_cols, MPI_DOUBLE, MASTER, \
@@ -197,6 +201,7 @@ void display(ProcData *proc)
     printf("==========================end===============================\n");
 }
 
+int iteration = 0;
 void kmeans(ProcData *proc)
 {
     if(proc->id == MASTER)
@@ -235,6 +240,11 @@ void kmeans(ProcData *proc)
                 }
             }
             proc->done = checkDone(proc);
+            ++iteration;
+            char out_path[100];
+            sprintf(out_path, "./visual/iteration-%d", iteration);
+            printf("out_path %s\n", out_path);
+            writeVisual(out_path, proc);
         }
     }
     else
